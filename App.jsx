@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   const [matches, setMatches] = useState([]);
@@ -17,6 +18,7 @@ function App() {
           {m.home} vs {m.away} - Tip: {m.tip} ({m.confidence}%)
         </div>
       ))}
+      <Analytics />
     </div>
   );
 }
