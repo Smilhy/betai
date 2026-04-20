@@ -1,0 +1,1770 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BetAI Now</title>
+  <meta name="theme-color" content="#020812" />
+  <style>
+    :root{
+      --bg:#030812;
+      --panel:#08131d;
+      --panel-2:#0b1724;
+      --line:rgba(255,255,255,.08);
+      --text:#f5fbff;
+      --muted:#9fb0be;
+      --green:#1fe2ae;
+      --green-2:#19c98f;
+      --danger:#ef5350;
+      --warning:#f59e0b;
+      --blue:#57a6ff;
+      --shadow:0 24px 70px rgba(0,0,0,.42);
+      --shadow-soft:0 12px 30px rgba(0,0,0,.22);
+      --radius:28px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(31,226,174,.12), transparent 25%),
+        radial-gradient(circle at 20% 100%, rgba(22,95,255,.10), transparent 20%),
+        linear-gradient(180deg,#01050a 0%, #020812 50%, #030a14 100%);
+      overflow:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size:58px 58px;
+      opacity:.18;
+      pointer-events:none;
+      z-index:-2;
+    }
+    .hidden{display:none!important}
+    .page{
+      position:absolute; inset:0;
+      opacity:0; transform:scale(1.012);
+      transition:opacity .45s ease, transform .45s ease;
+    }
+    .page.active{opacity:1;transform:scale(1)}
+    .card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(8,19,29,.97), rgba(5,10,16,.98));
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card::after{
+      content:"";
+      position:absolute; inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 20%);
+      pointer-events:none;
+    }
+    .small{font-size:13px;color:var(--muted)}
+    .muted{color:var(--muted)}
+    .green{color:var(--green)}
+    .btn{
+      height:58px; border:none; border-radius:16px; cursor:pointer;
+      font-weight:900; font-size:17px;
+      transition:transform .18s ease, opacity .18s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{
+      background:linear-gradient(180deg,var(--green),var(--green-2));
+      color:#061f16;
+      box-shadow:0 14px 30px rgba(31,226,174,.18);
+    }
+    .btn-danger{
+      background:rgba(239,83,80,.12);
+      color:#ffbdbb;
+      border:1px solid rgba(239,83,80,.18);
+    }
+
+    /* LOADER */
+    .loading{
+      position:fixed; inset:0; z-index:9999;
+      display:grid; place-items:center;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(31,226,174,.18), transparent 18%),
+        linear-gradient(180deg,#01050a 0%, #020812 55%, #030a14 100%);
+      overflow:hidden;
+      opacity:1;
+    }
+    .loader-wrap{position:relative;width:min(760px,92vw);padding:48px 28px;text-align:center}
+    .loader-grid{
+      position:absolute;inset:-40px;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size:56px 56px;
+      opacity:.22;
+      mask-image: radial-gradient(circle at center, black 45%, transparent 82%);
+      -webkit-mask-image: radial-gradient(circle at center, black 45%, transparent 82%);
+      animation:gridPulse 3.8s ease-in-out infinite;
+    }
+    .loader-orb{position:absolute;border-radius:50%;filter:blur(26px);opacity:.6;animation:floatOrb 5s ease-in-out infinite}
+    .orb-1{width:180px;height:180px;background:rgba(31,226,174,.16);left:6%;top:12%}
+    .orb-2{width:220px;height:220px;background:rgba(36,120,255,.10);right:8%;bottom:4%;animation-delay:-2.2s}
+    .loader-brand{
+      position:relative;
+      font-size:clamp(78px, 12vw, 156px);line-height:.86;letter-spacing:-.07em;font-weight:900;
+      color:#f7fbff;text-shadow:0 0 26px rgba(31,226,174,.14);animation:brandPulse 2s ease-in-out infinite;
+    }
+    .loader-brand span{color:#22e8b4;text-shadow:0 0 34px rgba(31,226,174,.28)}
+    .loader-sub{
+      position:relative;margin-top:16px;color:#dce7ee;font-size:clamp(13px,1.7vw,21px);
+      text-transform:uppercase;letter-spacing:.22em;
+    }
+    .loader-bar{
+      position:relative;width:min(420px,82vw);height:10px;margin:28px auto 0;border-radius:999px;
+      background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.05)
+    }
+    .loader-bar span{
+      display:block;height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#18c88f,#29f2bc);
+      box-shadow:0 0 18px rgba(31,226,174,.34);animation:loadBar 1.8s ease forwards;
+    }
+    .loader-dots{margin-top:20px;display:flex;justify-content:center;gap:10px}
+    .loader-dots span{
+      width:10px;height:10px;border-radius:50%;background:#22e8b4;box-shadow:0 0 14px rgba(31,226,174,.34);
+      animation:dotPulse 1.2s ease-in-out infinite;
+    }
+    .loader-dots span:nth-child(2){animation-delay:.18s}
+    .loader-dots span:nth-child(3){animation-delay:.36s}
+    .loading.fade-out{opacity:0;transition:opacity .5s ease}
+    @keyframes dotPulse{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(-8px);opacity:1}}
+    @keyframes floatOrb{0%,100%{transform:translateY(0) translateX(0)}50%{transform:translateY(-12px) translateX(8px)}}
+    @keyframes gridPulse{0%,100%{opacity:.16}50%{opacity:.28}}
+    @keyframes brandPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.01)}}
+    @keyframes loadBar{0%{width:0%}60%{width:72%}100%{width:100%}}
+
+    /* AUTH PAGE */
+    .auth-page{padding:20px}
+    .auth-shell{
+      max-width:1540px;
+      margin:0 auto;
+      height:calc(100vh - 40px);
+      border-radius:34px;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(2,8,14,.82), rgba(2,8,14,.92)),
+        radial-gradient(circle at 62% 60%, rgba(31,226,174,.08), transparent 18%),
+        radial-gradient(circle at 50% 90%, rgba(255,255,255,.06), transparent 20%);
+      position:relative;
+      overflow:hidden;
+      padding:26px 34px 30px;
+    }
+    .auth-shell::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(circle at 51% 38%, rgba(31,226,174,.12), transparent 18%),
+        linear-gradient(0deg, rgba(255,255,255,.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+      background-size:auto, 100% 60px, 60px 100%;
+      opacity:.24;
+      pointer-events:none;
+    }
+    .auth-topbar{
+      position:relative; z-index:2;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .brand-mini{font-size:34px; font-weight:900; letter-spacing:-.05em}
+    .brand-mini span{color:var(--green)}
+    .top-register{
+      display:flex; align-items:center; gap:18px; color:#e7f2f8;
+      font-size:17px;
+    }
+    .outline-btn{
+      border:1px solid rgba(31,226,174,.55);
+      background:transparent;
+      color:var(--green);
+      padding:14px 24px;
+      border-radius:14px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .auth-grid{
+      position:relative; z-index:2;
+      display:grid;
+      grid-template-columns:1.18fr .84fr;
+      gap:42px;
+      align-items:stretch;
+      height:calc(100% - 74px);
+    }
+    .auth-left{
+      position:relative;
+      padding:54px 10px 0 42px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      min-width:0;
+    }
+    .auth-left h1{
+      margin:0;
+      max-width:540px;
+      font-size:72px;
+      line-height:.95;
+      letter-spacing:-.05em;
+      font-weight:900;
+    }
+    .auth-left h1 .accent{color:var(--green)}
+    .auth-left .desc{
+      margin-top:26px;
+      max-width:540px;
+      font-size:22px;
+      line-height:1.5;
+      color:#e0ebf2;
+    }
+    .feature-list{
+      margin-top:30px;
+      display:grid;
+      gap:24px;
+      max-width:500px;
+    }
+    .feature{
+      display:grid;
+      grid-template-columns:72px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    .feature-icon{
+      width:72px;height:72px;border-radius:18px;
+      display:grid;place-items:center;
+      background:linear-gradient(180deg, rgba(8,19,29,.96), rgba(4,10,16,.98));
+      border:1px solid rgba(31,226,174,.12);
+      color:var(--green); font-size:34px;
+      box-shadow:0 12px 28px rgba(0,0,0,.25);
+    }
+    .feature h3{
+      margin:0 0 6px;
+      font-size:18px; font-weight:800;
+    }
+    .feature p{
+      margin:0;
+      font-size:15px;
+      line-height:1.6;
+      color:#d2dfe8;
+    }
+    .earth-scene{
+      position:absolute;
+      right:0; left:120px; bottom:86px;
+      height:310px;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    .earth-glow{
+      position:absolute; left:18%; right:0; bottom:0; height:170px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(31,226,174,.18), transparent 36%);
+      filter:blur(18px);
+      opacity:.85;
+    }
+    .earth-arc{
+      position:absolute; left:6%; right:0; bottom:-124px;
+      height:320px;
+      border-top:2px solid rgba(124,222,255,.85);
+      border-radius:50% 50% 0 0 / 100% 100% 0 0;
+      box-shadow:0 -8px 28px rgba(100,225,255,.12);
+      opacity:.95;
+    }
+    .earth-arc::before{
+      content:"";
+      position:absolute; left:5%; right:5%; top:-1px; height:1px;
+      background:linear-gradient(90deg, transparent, rgba(31,226,174,.75), transparent);
+      filter:blur(1px);
+    }
+    .route-line{
+      position:absolute; inset:16px 18px 46px 18px;
+      opacity:.9;
+    }
+    .route-line svg{width:100%;height:100%}
+    .stats-strip{
+      position:relative;
+      z-index:2;
+      width:min(760px, 92%);
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:0;
+      background:linear-gradient(180deg, rgba(8,19,29,.88), rgba(5,10,16,.96));
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:0 18px 36px rgba(0,0,0,.28);
+    }
+    .stats-strip .cell{
+      padding:26px 28px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      min-height:118px;
+    }
+    .stats-strip .cell + .cell{border-left:1px solid rgba(255,255,255,.06)}
+    .cell-ico{font-size:28px;color:var(--green)}
+    .cell-num{font-size:24px;font-weight:900}
+    .cell-label{margin-top:6px;color:#d6e3ea}
+
+    .auth-right{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px 10px 18px 0;
+    }
+    .auth-card{
+      width:min(530px,100%);
+      min-height:780px;
+      padding:44px 44px 34px;
+      border-radius:30px;
+      background:
+        linear-gradient(180deg, rgba(8,19,29,.97), rgba(4,10,16,.99));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 28px 72px rgba(0,0,0,.44);
+      position:relative;
+    }
+    .auth-card h2{
+      margin:0;
+      font-size:58px;
+      line-height:.95;
+      letter-spacing:-.05em;
+      text-align:center;
+      font-weight:900;
+    }
+    .auth-card h2 span{color:var(--green)}
+    .auth-card .sub{
+      margin-top:12px;
+      text-align:center;
+      font-size:16px;
+      color:#d7e4eb;
+    }
+    .tabs{
+      display:flex;
+      gap:0;
+      margin-top:34px;
+      padding:6px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.04);
+    }
+    .tab{
+      flex:1;
+      height:56px;
+      border:none;
+      border-radius:14px;
+      background:transparent;
+      color:#dbe6ee;
+      font-weight:800;
+      font-size:17px;
+      cursor:pointer;
+    }
+    .tab.active{
+      background:linear-gradient(180deg,var(--green),var(--green-2));
+      color:#062117;
+    }
+    .form{
+      margin-top:26px;
+    }
+    .field{margin-bottom:18px}
+    .field label{
+      display:block;
+      margin-bottom:10px;
+      font-size:15px;
+      color:#eef6fb;
+    }
+    .input-wrap{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      height:62px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.07);
+      background:linear-gradient(90deg, rgba(9,20,31,.98), rgba(11,24,37,.94));
+      padding:0 18px;
+    }
+    .field-icon{color:#dce7ef;font-size:22px;opacity:.9}
+    .input{
+      flex:1;
+      border:none;
+      background:transparent;
+      color:#fff;
+      outline:none;
+      font-size:17px;
+    }
+    .meta-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:18px 0 20px;
+      font-size:14px;
+      color:#d6e2ea;
+    }
+    .check{
+      display:inline-flex; align-items:center; gap:10px;
+      cursor:pointer;
+    }
+    .check input{accent-color:var(--green); width:18px; height:18px}
+    .linkish{color:var(--green); cursor:pointer}
+    .status-row{
+      min-height:50px;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 16px;
+      border-radius:15px;
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(90deg, rgba(8,19,29,.96), rgba(11,24,37,.92));
+      color:#dce7ef;
+      font-size:14px;
+      margin-bottom:10px;
+    }
+    .notice{
+      min-height:22px;
+      margin:6px 0 12px;
+      font-size:14px;
+      color:#98f6d8;
+    }
+    .auth-submit{
+      width:100%;
+      margin-top:4px;
+    }
+        .security-line{
+      margin-top:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      color:#dce7ee;
+      font-size:15px;
+    }
+    .security-line .shield{color:var(--green)}
+
+    /* DASHBOARD */
+    .app-page{padding:18px}
+    .app-shell{
+      max-width:1560px; margin:0 auto;
+      display:grid;
+      grid-template-columns:220px 1fr 290px;
+      gap:18px;
+      min-height:calc(100vh - 36px);
+    }
+    .sidebar,.content,.aside{display:grid;gap:18px;align-content:start}
+    .profile-card{padding:24px;text-align:center}
+    .avatar{
+      width:90px;height:90px;border-radius:50%;
+      margin:6px auto 16px;
+      display:grid;place-items:center;
+      font-size:32px;font-weight:900;
+      border:2px solid rgba(31,226,174,.88);
+      background:linear-gradient(145deg,#1b2a3c,#0c1620);
+      box-shadow:0 0 0 8px rgba(31,226,174,.06);
+    }
+    .profile-name{font-size:18px;font-weight:800}
+    .profile-tag{margin-top:8px;color:#bfced7}
+    .profile-tag b{color:var(--green)}
+    .profile-meta{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+      margin-top:22px;text-align:left;
+    }
+    .profile-meta strong{display:block;font-size:30px;margin-top:4px}
+    .nav-card{padding:14px;display:grid;gap:8px}
+    .nav-item{
+      display:flex;align-items:center;gap:12px;
+      padding:15px 16px;
+      border-radius:16px;
+      color:#dde7ed;
+      border:1px solid transparent;
+    }
+    .nav-item.active{
+      background:linear-gradient(90deg, rgba(11,122,95,.84), rgba(31,226,174,.14));
+      border-color:rgba(31,226,174,.16);
+    }
+    .nav-dot{width:18px;text-align:center}
+    .topbar{
+      padding:14px;
+      display:grid;
+      grid-template-columns:minmax(260px,1fr) auto auto;
+      gap:14px;
+      align-items:center;
+    }
+    .search{
+      height:60px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      color:#fff;
+      outline:none;
+      padding:0 18px;
+      font-size:16px;
+    }
+    .icon-btn{
+      width:50px;height:50px;
+      border-radius:16px;
+      display:grid;place-items:center;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      position:relative;
+    }
+    .badge{
+      position:absolute;top:-5px;right:-5px;
+      width:22px;height:22px;border-radius:50%;
+      display:grid;place-items:center;
+      background:var(--green);
+      color:#062116;
+      font-size:12px;font-weight:900;
+    }
+    .wallet{
+      height:60px;
+      padding:0 18px;
+      display:flex;align-items:center;gap:12px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      font-weight:900;
+    }
+    .wallet-icon{
+      width:34px;height:34px;border-radius:10px;
+      display:grid;place-items:center;
+      border:1px solid rgba(31,226,174,.22);
+      color:var(--green);
+    }
+    .hero{
+      padding:28px 34px;
+      min-height:220px;
+      display:grid;
+      grid-template-columns:1fr 280px;
+      gap:18px;
+      align-items:center;
+      background:
+        linear-gradient(90deg, rgba(4,10,18,.90) 0%, rgba(4,10,18,.58) 42%, rgba(4,10,18,.74) 100%),
+        radial-gradient(circle at 70% 24%, rgba(255,255,255,.14), transparent 12%),
+        linear-gradient(180deg,#0b1c2b,#07111b);
+    }
+    .hero h2{margin:0 0 12px;font-size:58px;line-height:.94;letter-spacing:-.045em}
+    .hero p{margin:0;max-width:560px;color:#dce7ee;font-size:18px}
+    .filters{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+    .filter-pill{
+      padding:13px 18px;border-radius:18px;border:1px solid var(--line);
+      background:rgba(255,255,255,.03);font-weight:800
+    }
+    .filter-pill.active{
+      background:linear-gradient(180deg, var(--green), var(--green-2));
+      color:#072117;
+    }
+    .hero-metric{justify-self:end;min-width:220px;text-align:left}
+    .hero-metric .label{color:#dce6ed}
+    .hero-metric .big{margin-top:10px;font-size:64px;font-weight:900;color:var(--green);line-height:1}
+    .table-card{padding:0;overflow:hidden}
+    .thead,.row{
+      display:grid;
+      grid-template-columns:100px 1.7fr 1fr 92px 126px 106px 80px;
+      gap:12px;align-items:center;
+    }
+    .thead{
+      padding:14px 18px;background:rgba(255,255,255,.03);
+      color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:800;
+    }
+    .row{
+      padding:18px;border-top:1px solid rgba(255,255,255,.04);
+      background:linear-gradient(180deg, rgba(10,20,31,.82), rgba(6,13,20,.92));
+    }
+    .team{font-size:17px;font-weight:800;line-height:1.22}
+    .league{font-size:13px;color:var(--muted);margin-top:6px}
+    .sport-card{
+      height:126px;border-radius:20px;border:1px solid var(--line);
+      padding:20px;display:flex;flex-direction:column;justify-content:flex-end;
+      margin-bottom:14px;
+      background:
+        linear-gradient(135deg, rgba(22,39,57,.95), rgba(8,18,29,.98)),
+        radial-gradient(circle at 80% 10%, rgba(31,226,174,.10), transparent 18%);
+    }
+    .aside .widget{padding:18px}
+    .widget-title{
+      margin:0 0 14px;
+      color:#dce7ee;
+      font-size:13px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .chart{
+      height:180px;border-radius:20px;border:1px solid rgba(255,255,255,.05);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)),
+        linear-gradient(0deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size:auto, 100% 25%;
+      position:relative;overflow:hidden
+    }
+    .chart svg{position:absolute;inset:0;width:100%;height:100%}
+
+    
+    /* DASHBOARD LIVE */
+    .sidebar,.content,.aside{opacity:0;transform:translateY(16px);animation:dashIn .65s ease forwards}
+    .content{animation-delay:.08s}
+    .aside{animation-delay:.16s}
+    @keyframes dashIn{
+      from{opacity:0;transform:translateY(16px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .card{transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease}
+    .card:hover{transform:translateY(-2px);box-shadow:0 28px 70px rgba(0,0,0,.48);border-color:rgba(31,226,174,.16)}
+    .nav-item,.filter-pill,.icon-btn,.wallet,.sport-card,.row{transition:all .2s ease}
+    .nav-item:hover,.filter-pill:hover{border-color:rgba(31,226,174,.18);background:rgba(255,255,255,.05)}
+    .icon-btn:hover,.wallet:hover,.sport-card:hover{transform:translateY(-1px)}
+    .badge{animation:pulseBadge 1.8s ease-in-out infinite}
+    @keyframes pulseBadge{
+      0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(31,226,174,.28)}
+      50%{transform:scale(1.08);box-shadow:0 0 0 6px rgba(31,226,174,0)}
+    }
+    .hero{overflow:hidden}
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:-20% -30%;
+      background:linear-gradient(110deg, transparent 20%, rgba(31,226,174,.10) 35%, transparent 50%);
+      animation:heroSweep 6s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes heroSweep{
+      from{transform:translateX(-40%)}
+      to{transform:translateX(40%)}
+    }
+    .hero-metric .big{animation:metricGlow 2.2s ease-in-out infinite}
+    @keyframes metricGlow{
+      0%,100%{text-shadow:0 0 0 rgba(31,226,174,0)}
+      50%{text-shadow:0 0 16px rgba(31,226,174,.18)}
+    }
+    .hero-line{stroke-dasharray:180;stroke-dashoffset:180;animation:drawLine 1.8s ease forwards .35s}
+    @keyframes drawLine{to{stroke-dashoffset:0}}
+    .filter-pill.active{box-shadow:0 0 0 1px rgba(31,226,174,.16), 0 10px 26px rgba(31,226,174,.14)}
+    .row{position:relative}
+    .row:hover{background:linear-gradient(180deg, rgba(12,24,36,.92), rgba(7,15,23,.98))}
+    .row::before{
+      content:"";
+      position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:999px;
+      background:linear-gradient(180deg, rgba(31,226,174,.0), rgba(31,226,174,.75), rgba(31,226,174,0));
+      opacity:0;transition:opacity .2s ease;
+    }
+    .row:hover::before{opacity:1}
+    .odds-pill,.green{transition:transform .18s ease, box-shadow .18s ease}
+    .row:hover .odds-pill,.row:hover .green{transform:translateY(-1px)}
+    .table-card .row:nth-child(odd){animation:softBlink 6s ease-in-out infinite}
+    .table-card .row:nth-child(even){animation:softBlink 6s ease-in-out infinite 1.2s}
+    @keyframes softBlink{
+      0%,100%{box-shadow:none}
+      50%{box-shadow:inset 0 0 0 1px rgba(31,226,174,.03)}
+    }
+    .chart svg polyline{stroke-dasharray:500;stroke-dashoffset:500;animation:chartDraw 2s ease forwards .4s}
+    .chart svg circle:last-child{animation:endPulse 1.6s ease-in-out infinite 1.8s}
+    @keyframes chartDraw{to{stroke-dashoffset:0}}
+    @keyframes endPulse{
+      0%,100%{r:5;filter:drop-shadow(0 0 0 rgba(31,226,174,0))}
+      50%{r:7;filter:drop-shadow(0 0 10px rgba(31,226,174,.45))}
+    }
+    .sport-card{position:relative;overflow:hidden}
+    .sport-card::after{
+      content:"";
+      position:absolute;inset:auto -20% -30% -20%;height:80%;
+      background:radial-gradient(circle at 50% 0%, rgba(31,226,174,.08), transparent 55%);
+      opacity:.8;pointer-events:none
+    }
+    .profile-card .avatar{animation:avatarFloat 3.6s ease-in-out infinite}
+    @keyframes avatarFloat{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-4px)}
+    }
+
+    
+    /* FULL BACKEND DASHBOARD */
+    .stats-shell{grid-template-columns:220px 1fr 320px}
+    .prediction-hero{
+      display:grid;
+      grid-template-columns:1.2fr .95fr;
+      gap:18px;
+      align-items:stretch;
+      min-height:220px;
+      background:
+        radial-gradient(circle at 76% 40%, rgba(95,74,255,.14), transparent 22%),
+        radial-gradient(circle at 72% 55%, rgba(31,226,174,.12), transparent 18%),
+        linear-gradient(180deg, rgba(8,19,29,.97), rgba(5,10,16,.98));
+    }
+    .prediction-hero h2{margin:8px 0 12px;font-size:52px;line-height:.95;letter-spacing:-.04em}
+    .prediction-hero p{margin:0;max-width:760px;color:#d7e4eb;font-size:18px;line-height:1.45}
+    .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:center}
+    .hero-stat-box,.stat-box{
+      border-radius:18px;border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03);padding:18px
+    }
+    .hero-stat-box span,.stat-box span{
+      display:block;color:#9fb0be;font-size:12px;text-transform:uppercase;letter-spacing:.12em
+    }
+    .hero-stat-box strong,.stat-box strong{display:block;margin-top:8px;font-size:30px;font-weight:900}
+    .filters-card{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:18px}
+    .filter-pill{
+      border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);
+      color:#dbe7ee;font-weight:800;border-radius:14px;padding:12px 16px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:10px;transition:all .22s ease;min-height:46px
+    }
+    .filter-pill b{
+      min-width:28px;height:24px;padding:0 8px;border-radius:999px;
+      display:inline-flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.06);font-size:12px
+    }
+    .filter-pill.active{background:linear-gradient(135deg, rgba(24,200,143,.16), rgba(31,226,174,.08));color:#9cf7da;border-color:rgba(31,226,174,.18);transform:translateY(-1px);box-shadow:0 8px 22px rgba(31,226,174,.12)}
+    .filter-pill[data-filter="LIVE"].active{background:linear-gradient(135deg, rgba(239,83,80,.16), rgba(239,83,80,.08));color:#ffc2c0;border-color:rgba(239,83,80,.22);box-shadow:0 8px 22px rgba(239,83,80,.12)}
+    .filter-pill[data-filter="SETTLED"].active{background:linear-gradient(135deg, rgba(255,198,0,.14), rgba(255,198,0,.08));color:#ffe28a;border-color:rgba(255,198,0,.18);box-shadow:0 8px 22px rgba(255,198,0,.10)}
+    .predictions-head,.prediction-row{
+      display:grid;grid-template-columns:78px 1.15fr 1.15fr 1.15fr 82px 82px 82px 92px 1.75fr 94px;gap:12px;align-items:center
+    }
+    .predictions-head{
+      padding:18px 22px;
+      background:rgba(255,255,255,.03);
+      color:#7f95a8;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-weight:800;
+      border-bottom:1px solid rgba(255,255,255,.04)
+    }
+    .prediction-rows{max-height:calc(100vh - 390px);overflow:auto;padding:10px}
+    .prediction-rows::-webkit-scrollbar{width:10px}
+    .prediction-rows::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:999px}
+    .prediction-row{
+      position:relative;
+      padding:18px 20px;
+      border-top:1px solid rgba(255,255,255,.04);
+      transition:background .22s ease, transform .22s ease, opacity .22s ease, box-shadow .22s ease;
+      animation:rowIn .24s ease;
+      cursor:pointer;
+      isolation:isolate;
+    }
+    .prediction-row::before{
+      content:"";
+      position:absolute; inset:8px;
+      border-radius:22px;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(31,226,174,.10), transparent 22%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      opacity:0;
+      transition:opacity .22s ease;
+      z-index:-1;
+    }
+    @keyframes rowIn{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:translateY(0)}}
+    .prediction-row:hover{transform:translateY(-1px); box-shadow:0 16px 34px rgba(0,0,0,.14)}
+    .prediction-row:hover::before{opacity:.75}
+    .prediction-row.active{
+      background:linear-gradient(90deg, rgba(31,226,174,.10), rgba(31,226,174,.02));
+      box-shadow:inset 0 0 0 1px rgba(31,226,174,.16), 0 18px 40px rgba(0,0,0,.18);
+      border-radius:24px;
+      transform:translateY(-1px);
+    }
+    .prediction-row.active::before{opacity:1}
+    .country-chip{
+      width:56px;height:36px;border-radius:999px;display:grid;place-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);font-size:12px;font-weight:900;color:#dbe7ee;
+      box-shadow:var(--shadow-soft)
+    }
+    .team-label{display:flex;align-items:center;gap:10px;font-weight:800}
+    .team-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(31,226,174,.28)}
+    .team-dot.away{background:var(--blue);box-shadow:0 0 12px rgba(87,166,255,.30)}
+    .prob-pill{
+      justify-self:start;min-width:60px;height:34px;padding:0 10px;border-radius:999px;display:inline-flex;
+      align-items:center;justify-content:center;font-weight:900;font-size:13px;border:1px solid transparent;
+      box-shadow:var(--shadow-soft)
+    }
+    .prob-home{background:rgba(31,226,174,.12);color:#98f6d8;border-color:rgba(31,226,174,.18)}
+    .prob-draw{background:rgba(255,200,0,.10);color:#f0d26a;border-color:rgba(255,200,0,.14)}
+    .prob-away{background:rgba(87,166,255,.12);color:#c5ddff;border-color:rgba(87,166,255,.16)}
+    .start-pill,.status-pill{
+      display:inline-flex;align-items:center;justify-content:center;min-width:82px;height:34px;padding:0 12px;border-radius:999px;
+      font-weight:800;font-size:12px;box-shadow:var(--shadow-soft)
+    }
+    .start-pill{background:rgba(163,92,255,.14);color:#d4b3ff;border:1px solid rgba(163,92,255,.20)}
+    .status-pill.pre{background:rgba(31,226,174,.10);color:#98f6d8;border:1px solid rgba(31,226,174,.18)}
+    .status-pill.win{background:rgba(31,226,174,.10);color:#98f6d8;border:1px solid rgba(31,226,174,.18)}
+    .status-pill.loss{background:rgba(239,83,80,.10);color:#ffb7b5;border:1px solid rgba(239,83,80,.16)}
+    .status-pill.live{background:rgba(87,166,255,.10);color:#cfe3ff;border:1px solid rgba(87,166,255,.18)}
+    .ai-pick{display:flex;flex-direction:column;gap:8px}
+    .ai-pick strong{
+      display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(31,226,174,.14);
+      background:rgba(31,226,174,.06);
+      font-size:14px
+    }
+    .ai-pick strong:hover{background:rgba(31,226,174,.12)}
+    .ai-pick .sub{color:#9fb0be;font-size:12px;line-height:1.45}
+    .ai-badges{display:flex;gap:8px;flex-wrap:wrap}
+    .signal-badge{
+      display:inline-flex;align-items:center;justify-content:center;height:26px;padding:0 10px;border-radius:999px;
+      font-size:11px;font-weight:900;letter-spacing:.03em;border:1px solid transparent;box-shadow:var(--shadow-soft)
+    }
+    .signal-badge.value{background:rgba(245,158,11,.11);color:#ffd88f;border-color:rgba(245,158,11,.20)}
+    .signal-badge.high{background:rgba(31,226,174,.11);color:#a9f8dc;border-color:rgba(31,226,174,.18)}
+    .signal-badge.live{background:rgba(87,166,255,.10);color:#d6e7ff;border-color:rgba(87,166,255,.18)}
+    .top-predictions{display:grid;gap:12px}
+    .top-pick{
+      padding:14px;border-radius:20px;border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow-soft);
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+      cursor:pointer
+    }
+    .top-pick:hover{transform:translateY(-1px);border-color:rgba(31,226,174,.14)}
+    .top-pick.active{border-color:rgba(31,226,174,.18); background:linear-gradient(180deg, rgba(31,226,174,.08), rgba(255,255,255,.02))}
+    .top-pick strong{display:block;font-size:15px;line-height:1.35}
+    .top-pick .meta{margin-top:6px;color:#9fb0be;font-size:12px}
+    .top-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .prediction-note{margin-top:14px;color:#9fb0be;font-size:13px;line-height:1.45}
+    .prediction-empty,.prediction-loading{padding:30px 22px;color:#dce7ef;text-align:center;font-size:15px}
+
+    .analysis-widget{position:sticky;top:18px}
+    .analysis-panel{display:flex;flex-direction:column;gap:14px}
+    .analysis-empty{
+      min-height:220px;display:grid;place-items:center;text-align:center;
+      color:#9fb0be;font-size:14px;line-height:1.6;
+      border:1px dashed rgba(255,255,255,.08);border-radius:18px;padding:20px;
+      background:rgba(255,255,255,.02)
+    }
+    .analysis-card{
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius:22px;padding:16px;
+      animation:analysisIn .28s ease;
+      box-shadow:var(--shadow-soft)
+    }
+    @keyframes analysisIn{
+      from{opacity:0; transform:translateX(16px)}
+      to{opacity:1; transform:translateX(0)}
+    }
+    .analysis-hero{padding:18px}
+    .analysis-teams{font-size:24px;font-weight:900;line-height:1.15}
+    .analysis-league{margin-top:6px;color:#9fb0be;font-size:13px}
+    .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .analysis-stat{
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;padding:12px;
+      box-shadow:var(--shadow-soft)
+    }
+    .analysis-stat span{display:block;color:#8fa3b1;font-size:11px;text-transform:uppercase;letter-spacing:.12em}
+    .analysis-stat strong{display:block;margin-top:6px;font-size:20px}
+    .analysis-bars{display:grid;gap:8px}
+    .analysis-bar-line{display:grid;grid-template-columns:28px 1fr 48px;align-items:center;gap:8px}
+    .analysis-bar-track{height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+    .analysis-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#18c88f,#29f2bc)}
+    .analysis-note{color:#d7e4eb;font-size:14px;line-height:1.65}
+    .analysis-chip{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:84px;height:34px;padding:0 12px;border-radius:999px;
+      background:rgba(31,226,174,.12);border:1px solid rgba(31,226,174,.18);
+      color:#9ff9df;font-weight:900;font-size:12px
+    }
+    .analysis-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .confidence-glow{color:#fff;text-shadow:0 0 18px rgba(31,226,174,.35)}
+
+    @media (max-width:1320px){
+      .stats-shell{grid-template-columns:1fr}
+      .sidebar,.aside{display:none}
+      .prediction-hero{grid-template-columns:1fr}
+      .predictions-head,.prediction-row{grid-template-columns:72px 1.2fr 1.2fr 1.2fr 78px 78px 78px 84px 1.45fr 90px;min-width:1380px}
+      .prediction-table-card{overflow:auto}
+    }
+
+    @media (max-width:1320px){
+      body{overflow:auto}
+      .auth-shell,.app-shell{height:auto;min-height:calc(100vh - 40px)}
+      .auth-grid,.app-shell{grid-template-columns:1fr}
+      .earth-scene{display:none}
+      .stats-strip{width:100%}
+      .auth-card{min-height:auto}
+      .app-shell .sidebar,.app-shell .aside{display:none}
+    }
+    @media (max-width:900px){
+      .auth-page,.app-page{padding:12px}
+      .auth-shell{padding:18px}
+      .auth-topbar{flex-direction:column;gap:16px;align-items:flex-start}
+      .auth-left{padding:12px 6px 0}
+      .auth-left h1{font-size:52px}
+      .auth-left .desc{font-size:18px}
+      .stats-strip{grid-template-columns:1fr}
+      .stats-strip .cell + .cell{border-left:none;border-top:1px solid rgba(255,255,255,.06)}
+      .auth-right{padding:10px 0 0}
+      .auth-card{padding:28px 20px}
+      .auth-card h2{font-size:44px}
+      .socials{grid-template-columns:1fr}
+      .topbar{grid-template-columns:1fr auto}
+      .wallet{grid-column:1 / -1}
+      .hero{grid-template-columns:1fr}
+      .thead,.row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <div class="loader-wrap">
+      <div class="loader-grid"></div>
+      <div class="loader-orb orb-1"></div>
+      <div class="loader-orb orb-2"></div>
+      <div class="loader-brand">Bet<span>AI</span></div>
+      <div class="loader-sub">Analiza ekspertów oraz sztucznej inteligencji</div>
+      <div class="loader-bar"><span></span></div>
+      <div class="loader-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <section id="authPage" class="page auth-page hidden">
+    <div class="auth-shell">
+      <div class="auth-topbar">
+        <div class="brand-mini">Bet<span>AI</span></div>
+        <div class="top-register">
+          <span>Nie masz konta?</span>
+          <button id="topRegisterBtn" class="outline-btn" type="button">Zarejestruj się</button>
+        </div>
+      </div>
+
+      <div class="auth-grid">
+        <div class="auth-left">
+          <div>
+            <h1><span class="accent">AI</span>, która<br>wyprzedza rynek.</h1>
+            <div class="desc">Analizy ekspertów z całego świata oraz sztucznej inteligencji w czasie rzeczywistym.</div>
+
+            <div class="feature-list">
+              <div class="feature">
+                <div class="feature-icon">📈</div>
+                <div>
+                  <h3>Skuteczność AI</h3>
+                  <p>Zaawansowane algorytmy analizujące tysiące zdarzeń na żywo.</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div>
+                  <h3>Szybkość</h3>
+                  <p>Błyskawiczne aktualizacje i typy na żywo w czasie rzeczywistym.</p>
+                </div>
+              </div>
+              <div class="feature">
+                <div class="feature-icon">🛡️</div>
+                <div>
+                  <h3>Bezpieczeństwo</h3>
+                  <p>Twoje dane są chronione na najwyższym poziomie.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="earth-scene" aria-hidden="true">
+            <div class="earth-glow"></div>
+            <div class="earth-arc"></div>
+            <div class="route-line">
+              <svg viewBox="0 0 700 250" preserveAspectRatio="none">
+                <polyline fill="none" stroke="rgba(31,226,174,.85)" stroke-width="2.4"
+                  points="40,210 110,180 150,140 208,156 246,104 286,150 326,126 364,126 426,72 490,76 554,20 596,34 646,-8 688,42"/>
+                <g fill="rgba(31,226,174,1)">
+                  <circle cx="110" cy="180" r="4"/><circle cx="150" cy="140" r="4"/><circle cx="208" cy="156" r="4"/>
+                  <circle cx="246" cy="104" r="4"/><circle cx="286" cy="150" r="4"/><circle cx="326" cy="126" r="4"/>
+                  <circle cx="364" cy="126" r="4"/><circle cx="426" cy="72" r="5"/><circle cx="490" cy="76" r="5"/>
+                  <circle cx="554" cy="20" r="5"/><circle cx="596" cy="34" r="5"/><circle cx="646" cy="-8" r="6"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="cell">
+              <div class="cell-ico">👥</div>
+              <div>
+                <div id="registeredCount" class="cell-num">0</div>
+                <div class="cell-label">Zarejestrowanych użytkowników</div>
+              </div>
+            </div>
+            <div class="cell">
+              <div class="cell-ico">🎯</div>
+              <div>
+                <div class="cell-num">76%</div>
+                <div class="cell-label">Skuteczność AI</div>
+              </div>
+            </div>
+            <div class="cell">
+              <div class="cell-ico">⚡</div>
+              <div>
+                <div id="activeCount" class="cell-num">0</div>
+                <div class="cell-label">Aktywni teraz • <span id="updatedTime">--:--:--</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-right">
+          <div class="auth-card">
+            <h2>Witaj w Bet<span>AI</span></h2>
+            <div class="sub">Zaloguj się do swojego konta</div>
+
+            <div class="tabs">
+              <button id="tabLogin" class="tab active" type="button">Logowanie</button>
+              <button id="tabRegister" class="tab" type="button">Rejestracja</button>
+            </div>
+
+            <form id="authForm" class="form">
+              <div class="field">
+                <label for="email">Email</label>
+                <div class="input-wrap">
+                  <span class="field-icon">✉️</span>
+                  <input id="email" class="input" type="email" placeholder="Wpisz swój email" autocomplete="email">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="password">Hasło</label>
+                <div class="input-wrap">
+                  <span class="field-icon">🔒</span>
+                  <input id="password" class="input" type="password" placeholder="Wpisz swoje hasło" autocomplete="current-password">
+                </div>
+              </div>
+
+              <div class="meta-row">
+                <label class="check"><input type="checkbox" checked> Zapamiętaj mnie</label>
+                <span class="linkish">Zapomniałeś hasła?</span>
+              </div>
+
+              <div class="status-row">
+                <span id="statusText">Gotowy do logowania.</span>
+                <span>🛡️</span>
+              </div>
+              <div id="notice" class="notice"></div>
+
+              <button id="submitBtn" class="btn btn-primary auth-submit" type="submit">Zaloguj się</button>
+            </form>
+
+            <div class="security-line"><span class="shield">🛡️</span> Twoje dane są w pełni zabezpieczone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+<section id="appPage" class="page app-page hidden">
+  <div class="app-shell stats-shell">
+    <aside class="sidebar">
+      <div class="card profile-card">
+        <div id="avatar" class="avatar">BN</div>
+        <div id="userName" class="profile-name">BetAI User</div>
+        <div class="profile-tag">VIP • <b>Premium</b></div>
+        <div class="profile-meta">
+          <div><span class="muted">Prognozy dziś</span><strong id="predCount">0</strong></div>
+          <div><span class="muted">Profit</span><strong id="profitValue">0 PLN</strong></div>
+        </div>
+      </div>
+
+      <div class="card nav-card">
+        <div class="nav-item active"><span class="nav-dot">🏠</span>Dashboard</div>
+        <div class="nav-item"><span class="nav-dot">⭐</span>Ulubione</div>
+        <div class="nav-item"><span class="nav-dot">📅</span>Najbliższe</div>
+        <div class="nav-item"><span class="nav-dot">🎯</span>Wydarzenia</div>
+        <div class="nav-item"><span class="nav-dot">🤖</span>Typy AI</div>
+        <div class="nav-item"><span class="nav-dot">📊</span>Statystyki</div>
+        <div class="nav-item"><span class="nav-dot">🎫</span>Kupon (0)</div>
+        <div class="nav-item"><span class="nav-dot">📈</span>Trade</div>
+        <div class="nav-item"><span class="nav-dot">⚔️</span>H2H</div>
+        <div class="nav-item"><span class="nav-dot">🏆</span>Ligi</div>
+        <div class="nav-item"><span class="nav-dot">⚙️</span>Ustawienia</div>
+        <button id="logoutBtn" class="btn btn-danger" type="button">Wyloguj</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="card topbar">
+        <input id="predictionSearch" class="search" placeholder="Szukaj zespołu lub ligi..." />
+        <div class="icon-btn">🔔<span class="badge">3</span></div>
+        <div class="wallet"><div class="wallet-icon">💳</div><div id="walletValue">PORTFEL: 4,924 PLN</div></div>
+      </div>
+
+      <div class="card prediction-hero">
+        <div class="hero-copy">
+          <div class="small green" style="text-transform:uppercase;letter-spacing:.25em;font-weight:800">BetAI Predictions</div>
+          <h2>REALNE PREDYKCJE NA DZIŚ</h2>
+          <p>Backend pobiera realne mecze z dziś, liczy prawdopodobieństwa H / D / A, generuje typ AI, a po zakończeniu rozlicza wynik oraz profit modelu.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat-box">
+            <span>Meczów dziś</span>
+            <strong id="tipsCount">0</strong>
+          </div>
+          <div class="hero-stat-box">
+            <span>Śr. pewność</span>
+            <strong id="heroAiValue" class="green">0%</strong>
+          </div>
+          <div class="hero-stat-box">
+            <span>ROI</span>
+            <strong id="gainValue" class="green">0%</strong>
+          </div>
+          <div class="hero-stat-box">
+            <span>Dzień</span>
+            <strong id="todayBadge">--</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card filters-card">
+        <button class="filter-pill active" data-filter="ALL"><span>Wszystkie</span><b id="countAll">0</b></button>
+        <button class="filter-pill" data-filter="PRE"><span>PRE</span><b id="countPre">0</b></button>
+        <button class="filter-pill" data-filter="LIVE"><span>LIVE</span><b id="countLive">0</b></button>
+        <button class="filter-pill" data-filter="SETTLED"><span>Settled</span><b id="countSettled">0</b></button>
+      </div>
+
+      <div class="card table-card prediction-table-card">
+        <div class="predictions-head">
+          <div>Country</div>
+          <div>League</div>
+          <div>Home</div>
+          <div>Away</div>
+          <div>H %</div>
+          <div>D %</div>
+          <div>A %</div>
+          <div>Start</div>
+          <div>Typ AI</div>
+          <div>Status</div>
+        </div>
+        <div id="rows" class="prediction-rows"></div>
+      </div>
+    </main>
+
+    <aside class="aside">
+      <div class="card widget analysis-widget">
+        <div class="widget-title">Analiza typu</div>
+        <div id="analysisPanel" class="analysis-panel">
+          <div class="analysis-empty">Kliknij typ AI albo cały mecz, aby zobaczyć pełną analizę.</div>
+        </div>
+      </div>
+
+      <div class="card widget">
+        <div class="widget-title">Top predykcje</div>
+        <div id="topPredictions" class="top-predictions"></div>
+      </div>
+
+      <div class="card widget">
+        <div class="widget-title">Statystyki modelu</div>
+        <div class="stats-grid">
+          <div class="stat-box"><span>Skuteczność</span><strong id="successValue">0%</strong></div>
+          <div class="stat-box"><span>Rozliczone</span><strong id="settledCount">0</strong></div>
+          <div class="stat-box"><span>Profit</span><strong id="asideProfit">0 PLN</strong></div>
+          <div class="stat-box"><span>ROI</span><strong id="asideRoi">0%</strong></div>
+        </div>
+      </div>
+
+      <div class="card widget">
+        <div class="widget-title">Ostatnia aktualizacja</div>
+        <div class="stats-grid" style="grid-template-columns:1fr">
+          <div class="stat-box"><span>Refresh</span><strong id="lastRefresh">--:--</strong></div>
+        </div>
+        <div class="prediction-note">
+          Po 00:00 dashboard automatycznie przechodzi na nowy dzień i pobiera nową bazę meczów.
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://vrdikbibmozldyewacaa.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_hmM93BvZiCFy5ztC4QGq4w_ORi2SYcF';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    });
+
+    const state = { mode:'login', user:null, heartbeat:null };
+
+    
+    const dashboardState = {
+      started: false,
+      loading: false,
+      loaded: false,
+      error: '',
+      matches: [],
+      search: '',
+      refreshTimer: null,
+      midnightTimer: null,
+      activeMatchId: null,
+      filter: 'ALL'
+    };
+
+    function getTodayDatePLFull() {
+      const d = new Date();
+      const weekdays = ['Nd','Pon','Wt','Śr','Czw','Pt','Sob'];
+      const months = ['Sty','Lut','Mar','Kwi','Maj','Cze','Lip','Sie','Wrz','Paź','Lis','Gru'];
+      return `${weekdays[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function formatCurrency(num) {
+      return Number(num || 0).toLocaleString('pl-PL', {maximumFractionDigits: 0}) + ' PLN';
+    }
+
+    function startsInLabel(iso) {
+      const diff = new Date(iso).getTime() - Date.now();
+      if (diff <= 0) return 'Start';
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m ? `${h}h ${m}m` : `${h}h`;
+    }
+
+    function filterMatches(matches) {
+      const q = dashboardState.search.trim().toLowerCase();
+      const now = Date.now();
+
+      let base = matches.filter(m => {
+        const ts = m.commenceTime ? new Date(m.commenceTime).getTime() : now;
+        if (dashboardState.filter === 'PRE') return !m.settled && ts > now;
+        if (dashboardState.filter === 'LIVE') return !m.settled && ts <= now;
+        if (dashboardState.filter === 'SETTLED') return !!m.settled;
+        return true;
+      });
+
+      if (!q) return base;
+      return base.filter(m => [m.country, m.league, m.home, m.away, m.pick].join(' ').toLowerCase().includes(q));
+    }
+
+    function updateFilterCounts() {
+      const now = Date.now();
+      const all = dashboardState.matches.length;
+      const pre = dashboardState.matches.filter(m => !m.settled && new Date(m.commenceTime || Date.now()).getTime() > now).length;
+      const live = dashboardState.matches.filter(m => !m.settled && new Date(m.commenceTime || Date.now()).getTime() <= now).length;
+      const settled = dashboardState.matches.filter(m => m.settled).length;
+      const map = {
+        countAll: all,
+        countPre: pre,
+        countLive: live,
+        countSettled: settled
+      };
+      Object.entries(map).forEach(([id,val]) => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = val.toLocaleString('pl-PL');
+      });
+    }
+
+    
+    function renderRows() {
+      if (!el.rows) return;
+
+      if (dashboardState.loading && !dashboardState.loaded) {
+        el.rows.innerHTML = '<div class="prediction-loading">Pobieram realne mecze, predykcje i rozliczenia...</div>';
+        return;
+      }
+
+      if (dashboardState.error && !dashboardState.matches.length) {
+        el.rows.innerHTML = `<div class="prediction-empty">${dashboardState.error}</div>`;
+        updateDashboardStats([]);
+        renderTopPredictions([]);
+        renderAnalysisPanel(null);
+        return;
+      }
+
+      updateFilterCounts();
+      const filtered = filterMatches(dashboardState.matches);
+
+      if (!filtered.length) {
+        const msg = dashboardState.filter === 'LIVE' ? 'Brak meczów LIVE w tej chwili.' : dashboardState.filter === 'PRE' ? 'Brak meczów PRE dla tego wyszukiwania.' : dashboardState.filter === 'SETTLED' ? 'Brak rozliczonych typów.' : 'Brak meczów dla tego wyszukiwania.';
+        el.rows.innerHTML = `<div class="prediction-empty">${msg}</div>`;
+        updateDashboardStats([]);
+        renderTopPredictions([]);
+        renderAnalysisPanel(null);
+        return;
+      }
+
+      if (!dashboardState.activeMatchId || !filtered.some(m => m.id === dashboardState.activeMatchId)) {
+        dashboardState.activeMatchId = filtered[0].id;
+      }
+
+      el.rows.innerHTML = filtered.map(m => {
+        const badges = [];
+        if ((m.valuePct || 0) >= 6) badges.push('<span class="signal-badge value">🔥 VALUE</span>');
+        if ((m.confidence || 0) >= 70) badges.push('<span class="signal-badge high">🟢 HIGH</span>');
+        if (m.statusClass === 'live') badges.push('<span class="signal-badge live">LIVE</span>');
+
+        return `
+        <div class="prediction-row ${m.id === dashboardState.activeMatchId ? 'active' : ''}" data-match-id="${m.id}">
+          <div><span class="country-chip">${m.country}</span></div>
+          <div><div class="team-label"><span class="team-dot"></span><span>${m.league}</span></div></div>
+          <div><div class="team-label"><span class="team-dot"></span><span>${m.home}</span></div></div>
+          <div><div class="team-label"><span class="team-dot away"></span><span>${m.away}</span></div></div>
+          <div><span class="prob-pill prob-home">${m.homeProb}%</span></div>
+          <div><span class="prob-pill prob-draw">${m.drawProb}%</span></div>
+          <div><span class="prob-pill prob-away">${m.awayProb}%</span></div>
+          <div><span class="start-pill">${m.settled ? (m.scoreText || 'Koniec') : ((m.commenceTime && new Date(m.commenceTime).getTime() <= Date.now()) ? 'LIVE' : m.startLabel)}</span></div>
+          <div class="ai-pick">
+            <strong class="pick-trigger" data-match-id="${m.id}">${m.pick}</strong>
+            <div class="ai-badges">${badges.join('')}</div>
+            <div class="sub">${m.analysis}</div>
+          </div>
+          <div><span class="status-pill ${m.statusClass}">${m.statusText}</span></div>
+        </div>`;
+      }).join('');
+
+      Array.from(el.rows.querySelectorAll('.prediction-row')).forEach(row => {
+        row.addEventListener('click', () => {
+          dashboardState.activeMatchId = row.dataset.matchId;
+          renderRows();
+        });
+      });
+      Array.from(el.rows.querySelectorAll('.pick-trigger')).forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dashboardState.activeMatchId = btn.dataset.matchId;
+          renderRows();
+        });
+      });
+
+      const active = filtered.find(m => m.id === dashboardState.activeMatchId) || filtered[0];
+      renderAnalysisPanel(active);
+      updateDashboardStats(filtered);
+      renderTopPredictions(filtered);
+    }
+
+    function renderAnalysisPanel(match) {
+      const panel = document.getElementById('analysisPanel');
+      if (!panel) return;
+      if (!match) {
+        panel.innerHTML = '<div class="analysis-empty">Kliknij typ AI albo cały mecz, aby zobaczyć pełną analizę.</div>';
+        return;
+      }
+
+      const badges = [];
+      if ((match.valuePct || 0) >= 6) badges.push('<span class="signal-badge value">🔥 VALUE</span>');
+      if ((match.confidence || 0) >= 70) badges.push('<span class="signal-badge high">🟢 HIGH CONFIDENCE</span>');
+      if (match.statusClass === 'live') badges.push('<span class="signal-badge live">LIVE</span>');
+
+      panel.innerHTML = `
+        <div class="analysis-card analysis-hero">
+          <div class="analysis-teams">${match.home} <span style="color:#5c7388">vs</span> ${match.away}</div>
+          <div class="analysis-league">${match.league} • ${match.timeLocal}</div>
+          <div class="analysis-badges">${badges.join('')}</div>
+        </div>
+
+        <div class="analysis-grid">
+          <div class="analysis-stat"><span>Typ AI</span><strong class="green">${match.pick}</strong></div>
+          <div class="analysis-stat"><span>Status</span><strong>${match.statusText}</strong></div>
+          <div class="analysis-stat"><span>Kurs</span><strong>${match.odds}</strong></div>
+          <div class="analysis-stat"><span>Pewność</span><strong class="confidence-glow">${match.confidence}%</strong></div>
+          <div class="analysis-stat"><span>Value</span><strong class="green">${match.valuePct}%</strong></div>
+          <div class="analysis-stat"><span>Profit</span><strong class="${(match.profit || 0) >= 0 ? 'green' : ''}">${match.profitText || '0 PLN'}</strong></div>
+        </div>
+
+        <div class="analysis-card">
+          <div style="font-weight:900;margin-bottom:12px">Rozkład H / D / A</div>
+          <div class="analysis-bars">
+            <div class="analysis-bar-line"><span>H</span><div class="analysis-bar-track"><span class="analysis-bar-fill" style="width:${match.homeProb}%"></span></div><strong>${match.homeProb}%</strong></div>
+            <div class="analysis-bar-line"><span>D</span><div class="analysis-bar-track"><span class="analysis-bar-fill" style="width:${match.drawProb}%"></span></div><strong>${match.drawProb}%</strong></div>
+            <div class="analysis-bar-line"><span>A</span><div class="analysis-bar-track"><span class="analysis-bar-fill" style="width:${match.awayProb}%"></span></div><strong>${match.awayProb}%</strong></div>
+          </div>
+        </div>
+
+        <div class="analysis-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px">
+            <div style="font-weight:900">Analiza meczu</div>
+            <span class="analysis-chip">${match.result || 'PRE'}</span>
+          </div>
+          <div class="analysis-note">${match.analysis}</div>
+        </div>
+      `;
+    }
+
+function updateDashboardStats(matches) {
+      const source = matches.length ? matches : dashboardState.matches;
+      const total = source.length;
+      const avgConfidence = total ? Math.round(source.reduce((a,m)=>a+m.confidence,0)/total) : 0;
+      const settled = source.filter(m => m.settled);
+      const wins = settled.filter(m => m.result === 'WIN');
+      const profit = settled.reduce((a,m)=>a+(m.profit || 0), 0);
+      const stakeTotal = settled.reduce((a,m)=>a+(m.stake || 0), 0);
+      const roi = stakeTotal ? Math.round((profit / stakeTotal) * 100) : 0;
+
+      const todayBadge = document.getElementById('todayBadge');
+      const lastRefresh = document.getElementById('lastRefresh');
+      const settledCount = document.getElementById('settledCount');
+      const asideProfit = document.getElementById('asideProfit');
+      const asideRoi = document.getElementById('asideRoi');
+
+      const fields = {
+        predCount: document.getElementById('predCount'),
+        tipsCount: document.getElementById('tipsCount'),
+        heroAiValue: document.getElementById('heroAiValue'),
+        gainValue: document.getElementById('gainValue'),
+        successValue: document.getElementById('successValue'),
+        profitValue: document.getElementById('profitValue'),
+        walletValue: document.getElementById('walletValue')
+      };
+
+      if (fields.predCount) fields.predCount.textContent = total.toLocaleString('pl-PL');
+      if (fields.tipsCount) fields.tipsCount.textContent = total.toLocaleString('pl-PL');
+      if (fields.heroAiValue) fields.heroAiValue.textContent = `${avgConfidence}%`;
+      if (fields.gainValue) fields.gainValue.textContent = `${roi >= 0 ? '+' : ''}${roi}%`;
+      if (fields.successValue) fields.successValue.textContent = settled.length ? `${Math.round((wins.length / settled.length) * 100)}%` : `${avgConfidence}%`;
+      if (fields.profitValue) fields.profitValue.textContent = `${profit >= 0 ? '+' : ''}${formatCurrency(profit)}`;
+      if (fields.walletValue) fields.walletValue.textContent = `PORTFEL: ${formatCurrency(4924 + profit)}`;
+      if (todayBadge) todayBadge.textContent = getTodayDatePLFull();
+      if (lastRefresh) lastRefresh.textContent = new Date().toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'});
+      if (settledCount) settledCount.textContent = settled.length.toLocaleString('pl-PL');
+      if (asideProfit) asideProfit.textContent = `${profit >= 0 ? '+' : ''}${formatCurrency(profit)}`;
+      if (asideRoi) asideRoi.textContent = `${roi >= 0 ? '+' : ''}${roi}%`;
+    }
+
+    
+    function renderTopPredictions(matches) {
+      const topHolder = document.getElementById('topPredictions');
+      if (!topHolder) return;
+      if (!matches.length) {
+        topHolder.innerHTML = '<div class="prediction-empty">Brak top predykcji.</div>';
+        return;
+      }
+      const top = matches
+        .slice()
+        .sort((a,b)=> b.confidence - a.confidence)
+        .slice(0,4);
+
+      topHolder.innerHTML = top.map(m => {
+        const badges = [];
+        if ((m.valuePct || 0) >= 6) badges.push('<span class="signal-badge value">🔥 VALUE</span>');
+        if ((m.confidence || 0) >= 70) badges.push('<span class="signal-badge high">🟢 HIGH</span>');
+        return `
+        <div class="top-pick ${m.id === dashboardState.activeMatchId ? 'active' : ''}" data-match-id="${m.id}">
+          <strong>${m.home} vs ${m.away}</strong>
+          <div class="meta">${m.league} • ${m.timeLocal}</div>
+          <div class="meta"><span class="green">${m.pick}</span> • ${m.confidence}%</div>
+          <div class="top-badges">${badges.join('')}</div>
+        </div>`;
+      }).join('');
+
+      Array.from(topHolder.querySelectorAll('.top-pick')).forEach(card => {
+        card.addEventListener('click', () => {
+          dashboardState.activeMatchId = card.dataset.matchId;
+          renderRows();
+        });
+      });
+    }
+
+
+    async function loadDashboardData() {
+      dashboardState.loading = true;
+      dashboardState.error = '';
+      renderRows();
+      try {
+        const res = await fetch('/.netlify/functions/dashboard');
+        if (!res.ok) throw new Error(`Błąd backendu: ${res.status}`);
+        const data = await res.json();
+        dashboardState.matches = Array.isArray(data.matches) ? data.matches : [];
+        dashboardState.loaded = true;
+      } catch (err) {
+        dashboardState.error = 'Nie udało się pobrać realnych meczów z backendu.';
+        dashboardState.loaded = true;
+      } finally {
+        dashboardState.loading = false;
+        renderRows();
+      }
+    }
+
+const el = {
+      loading: document.getElementById('loading'),
+      authPage: document.getElementById('authPage'),
+      appPage: document.getElementById('appPage'),
+      topRegisterBtn: document.getElementById('topRegisterBtn'),
+      tabLogin: document.getElementById('tabLogin'),
+      tabRegister: document.getElementById('tabRegister'),
+      authForm: document.getElementById('authForm'),
+      email: document.getElementById('email'),
+      password: document.getElementById('password'),
+      statusText: document.getElementById('statusText'),
+      notice: document.getElementById('notice'),
+      submitBtn: document.getElementById('submitBtn'),
+      registeredCount: document.getElementById('registeredCount'),
+      activeCount: document.getElementById('activeCount'),
+      updatedTime: document.getElementById('updatedTime'),
+      avatar: document.getElementById('avatar'),
+      userName: document.getElementById('userName'),
+      logoutBtn: document.getElementById('logoutBtn'),
+      rows: document.getElementById('rows')
+    };
+
+    function setMode(mode) {
+      state.mode = mode;
+      el.tabLogin.classList.toggle('active', mode === 'login');
+      el.tabRegister.classList.toggle('active', mode === 'register');
+      el.submitBtn.textContent = mode === 'login' ? 'Zaloguj się' : 'Utwórz konto';
+      el.statusText.textContent = mode === 'login' ? 'Gotowy do logowania.' : 'Wpisz email i hasło, aby założyć konto.';
+      setNotice('');
+    }
+
+    function setNotice(msg = '', success = false) {
+      el.notice.textContent = msg;
+      el.notice.style.color = success ? '#98f6d8' : '#ffb5b5';
+    }
+
+    function showLoading(show) {
+      if (show) {
+        el.loading.classList.remove('hidden');
+        el.loading.classList.remove('fade-out');
+        return;
+      }
+      el.loading.classList.add('fade-out');
+      setTimeout(() => el.loading.classList.add('hidden'), 520);
+    }
+
+    function showAuth() {
+      el.appPage.classList.add('hidden');
+      el.appPage.classList.remove('active');
+      el.authPage.classList.remove('hidden');
+      requestAnimationFrame(() => el.authPage.classList.add('active'));
+    }
+
+    function showApp() {
+      el.authPage.classList.add('hidden');
+      el.authPage.classList.remove('active');
+      el.appPage.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        el.appPage.classList.add('active');
+        });
+    }
+
+    function clearSupabaseStorage() {
+      try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.toLowerCase().includes('supabase')) keys.push(key);
+        }
+        keys.forEach(key => localStorage.removeItem(key));
+      } catch {}
+      try {
+        const keys = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.toLowerCase().includes('supabase')) keys.push(key);
+        }
+        keys.forEach(key => sessionStorage.removeItem(key));
+      } catch {}
+    }
+
+    async function upsertProfile(user) {
+      if (!user) return;
+      try {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email,
+          created_at: new Date().toISOString()
+        });
+      } catch {}
+    }
+
+    async function sendHeartbeat() {
+      if (!state.user) return;
+      try {
+        await supabase.from('presence_heartbeats').upsert({
+          user_id: state.user.id,
+          email: state.user.email,
+          last_seen: new Date().toISOString()
+        });
+      } catch {}
+    }
+
+    function stopHeartbeat() {
+      if (state.heartbeat) clearInterval(state.heartbeat);
+      state.heartbeat = null;
+    }
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      sendHeartbeat();
+      state.heartbeat = setInterval(sendHeartbeat, 60000);
+    }
+
+    async function loadStats() {
+      let registeredUsers = 0;
+      let activeUsers = 0;
+
+      try {
+        const registered = await supabase.from('profiles').select('*', { count:'exact', head:true });
+        registeredUsers = registered.count || 0;
+      } catch {}
+
+      try {
+        const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const active = await supabase.from('presence_heartbeats').select('*', { count:'exact', head:true }).gte('last_seen', cutoff);
+        activeUsers = active.count || 0;
+      } catch {}
+
+      el.registeredCount.textContent = String(registeredUsers);
+      el.activeCount.textContent = String(activeUsers);
+      el.updatedTime.textContent = new Date().toLocaleTimeString('pl-PL');
+    }
+
+    function setUserUI(user) {
+      const email = user?.email || 'user@betai.pl';
+      el.avatar.textContent = email.slice(0,2).toUpperCase();
+      el.userName.textContent = email.split('@')[0];
+    }
+
+    async function afterLogin(user) {
+      state.user = user;
+      setUserUI(user);
+      await upsertProfile(user);
+      await loadStats();
+      startHeartbeat();
+      showApp();
+      startDashboardLife();
+    }
+
+    async function doLogout() {
+      stopHeartbeat();
+      try { await supabase.auth.signOut({ scope:'global' }); } catch {}
+      clearSupabaseStorage();
+      state.user = null;
+      await loadStats();
+      setNotice('Wylogowano.', true);
+      showAuth();
+    }
+
+    async function handleLogin(email, password) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) throw new Error(error?.message || 'Nie udało się zalogować.');
+      return data.user;
+    }
+
+    async function handleRegister(email, password) {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) throw new Error(error.message || 'Nie udało się utworzyć konta.');
+      if (data.user) await upsertProfile(data.user);
+      return data.user;
+    }
+
+    el.tabLogin.addEventListener('click', () => setMode('login'));
+    el.tabRegister.addEventListener('click', () => setMode('register'));
+    el.topRegisterBtn.addEventListener('click', () => setMode('register'));
+    el.logoutBtn.addEventListener('click', doLogout);
+
+    el.authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = el.email.value.trim();
+      const password = el.password.value;
+
+      if (!email || !password) {
+        setNotice('Podaj email i hasło.');
+        return;
+      }
+
+      try {
+        if (state.mode === 'register') {
+          el.statusText.textContent = 'Tworzenie konta...';
+          setNotice('Trwa rejestracja...', true);
+          await handleRegister(email, password);
+          el.statusText.textContent = 'Logowanie do nowego konta...';
+        } else {
+          el.statusText.textContent = 'Trwa logowanie...';
+          setNotice('Sprawdzanie danych...', true);
+        }
+
+        const user = await handleLogin(email, password);
+        await afterLogin(user);
+      } catch (error) {
+        el.statusText.textContent = 'Wystąpił problem z logowaniem.';
+        setNotice(error?.message || 'Wystąpił błąd logowania.');
+      }
+    });
+
+
+    function animateValue(elm, to, suffix = '', prefix = '') {
+      if (!elm) return;
+      const fromText = (elm.textContent || '').replace(/[^0-9.-]/g, '');
+      const from = Number(fromText || 0);
+      const start = performance.now();
+      const dur = 700;
+      function step(t){
+        const p = Math.min((t - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const val = from + (to - from) * eased;
+        elm.textContent = prefix + (Math.round(val * 10) / 10).toLocaleString('pl-PL') + suffix;
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+
+    function scheduleMidnightRefresh() {
+      if (dashboardState.midnightTimer) clearTimeout(dashboardState.midnightTimer);
+      const now = new Date();
+      const next = new Date();
+      next.setHours(24, 0, 5, 0);
+      dashboardState.midnightTimer = setTimeout(() => {
+        if (!el.appPage.classList.contains('hidden')) loadDashboardData();
+        scheduleMidnightRefresh();
+      }, next - now);
+    }
+
+    function startDashboardLife() {
+      if (dashboardState.started) return;
+      if (!el.appPage || el.appPage.classList.contains('hidden')) return;
+
+      dashboardState.started = true;
+      const search = document.getElementById('predictionSearch');
+      if (search && !search.dataset.bound) {
+        search.dataset.bound = '1';
+        search.addEventListener('input', (e) => {
+          dashboardState.search = e.target.value || '';
+          renderRows();
+        });
+      }
+      const filterPills = Array.from(document.querySelectorAll('.filter-pill[data-filter]'));
+      filterPills.forEach(btn => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          dashboardState.filter = btn.dataset.filter || 'ALL';
+          filterPills.forEach(x => x.classList.toggle('active', x === btn));
+          renderRows();
+        });
+      });
+
+      scheduleMidnightRefresh();
+      loadDashboardData();
+      dashboardState.refreshTimer = setInterval(() => {
+        if (!el.appPage.classList.contains('hidden')) loadDashboardData();
+      }, 5 * 60 * 1000);
+    }
+
+    async function init() {
+      renderRows();
+      setMode('login');
+      showLoading(true);
+
+      const startedAt = Date.now();
+
+      try {
+        await loadStats();
+      } catch {}
+
+      const elapsed = Date.now() - startedAt;
+      const minDelay = 1800;
+      if (elapsed < minDelay) {
+        await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+      }
+
+      showAuth();
+      showLoading(false);
+    }
+
+    window.addEventListener('beforeunload', stopHeartbeat);
+    init();
+  </script>
+</body>
+</html>
