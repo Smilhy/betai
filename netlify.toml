@@ -1,13 +1,17 @@
-<!doctype html>
-<html lang="pl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bet+AI — Dashboard</title>
-  <script type="module" crossorigin src="/assets/index-DApMab0e.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Dj5lCoc1.css">
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
+[build]
+  command = "npm install --no-audit --no-fund && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/tipster/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
